@@ -67,6 +67,19 @@ function calculateConsumption(volumeLitres, distanceKm) {
   return (volumeLitres / distanceKm) * 100;
 }
 
+function validateOdometer(odometer, vehicle) {
+  const lastReceipt = getLastReceiptForVehicle(vehicle.id);
+  const previousOdometer = lastReceipt ? lastReceipt.odometer : vehicle.startingOdometer;
+  
+  if (odometer < previousOdometer) {
+    return {
+      valid: false,
+      message: `Odometer must be at least ${previousOdometer.toLocaleString()} km (previous reading)`
+    };
+  }
+  return { valid: true };
+}
+
 // UI Functions
 function showAlert(message, type = 'success') {
   const container = document.getElementById('alert-container');
@@ -207,6 +220,12 @@ function addReceipt(vehicleId, volumeLitres, pricePerLitre, date, odometer, gasS
   const vehicle = getVehicleById(vehicleId);
   if (!vehicle) {
     showAlert('Vehicle not found.', 'error');
+    return;
+  }
+
+  const odometerValidation = validateOdometer(odometer, vehicle);
+  if (!odometerValidation.valid) {
+    showAlert(odometerValidation.message, 'error');
     return;
   }
 
@@ -473,6 +492,12 @@ function importData(file) {
         if (receiptDate > new Date()) return false;
         if (typeof r.volumeLitres !== 'number' || r.volumeLitres <= 0) return false;
         if (typeof r.odometer !== 'number' || r.odometer < 0) return false;
+        
+        const existingReceiptsForVehicle = existingReceipts.filter(er => er.vehicleId === r.vehicleId);
+        const lastReceipt = existingReceiptsForVehicle.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+        const previousOdometer = lastReceipt ? lastReceipt.odometer : 0;
+        if (r.odometer < previousOdometer) return false;
+        
         return true;
       });
 
