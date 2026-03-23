@@ -665,6 +665,13 @@
       return Date.now().toString(36) + Math.random().toString(36).substr(2);
     }
 
+    function escapeHtml(str) {
+      if (typeof str !== 'string') return str;
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
     function getVehicles() {
       const data = localStorage.getItem(STORAGE_KEYS.vehicles);
       return data ? JSON.parse(data) : [];
@@ -823,8 +830,8 @@
       list.innerHTML = vehicles.map(v => `
         <li class="vehicle-item">
           <div class="vehicle-info">
-            <h3>${v.make} ${v.model}</h3>
-            <p>${v.year} | Starting: ${v.startingOdometer.toLocaleString()} km</p>
+            <h3>${escapeHtml(v.make)} ${escapeHtml(v.model)}</h3>
+            <p>${escapeHtml(String(v.year))} | Starting: ${v.startingOdometer.toLocaleString()} km</p>
           </div>
           <div class="vehicle-actions">
             <button class="btn btn-secondary" onclick="openEditVehicleModal('${v.id}')">Edit</button>
@@ -840,11 +847,11 @@
       const filterSelect = document.getElementById('filter-vehicle');
 
       const options = '<option value="">Select a vehicle</option>' +
-        vehicles.map(v => `<option value="${v.id}">${v.make} ${v.model}</option>`).join('');
+        vehicles.map(v => `<option value="${escapeHtml(v.id)}">${escapeHtml(v.make)} ${escapeHtml(v.model)}</option>`).join('');
 
       receiptSelect.innerHTML = options;
       filterSelect.innerHTML = '<option value="">All Vehicles</option>' +
-        vehicles.map(v => `<option value="${v.id}">${v.make} ${v.model}</option>`).join('');
+        vehicles.map(v => `<option value="${escapeHtml(v.id)}">${escapeHtml(v.make)} ${escapeHtml(v.model)}</option>`).join('');
     }
 
     // Receipt Functions
@@ -916,7 +923,7 @@
           <li class="receipt-item">
             <div class="receipt-header">
               <div>
-                <strong>${vehicleName}</strong>
+                <strong>${escapeHtml(vehicleName)}</strong>
                 <span class="receipt-date">${formatDate(r.date)}</span>
               </div>
               <button class="btn btn-danger" onclick="confirmDeleteReceipt('${r.id}')" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">Delete</button>
@@ -948,7 +955,7 @@
               </div>
               <div class="receipt-detail" style="grid-column: 1 / -1;">
                 <label>Gas Station</label>
-                <span>${r.gasStation}</span>
+                <span>${escapeHtml(r.gasStation)}</span>
               </div>
             </div>
           </li>
@@ -988,7 +995,7 @@
           return `
             <div class="vehicle-item" style="margin-bottom: 1rem;">
               <div class="vehicle-info">
-                <h3>${v.make} ${v.model}</h3>
+                <h3>${escapeHtml(v.make)} ${escapeHtml(v.model)}</h3>
                 <p>${vReceipts.length} receipt(s) | Total: ${formatCurrency(totalSpent)}</p>
               </div>
               <div class="stat-card" style="padding: 0.5rem;">
@@ -1013,7 +1020,7 @@
             <div class="receipt-item" style="padding: 0.75rem;">
               <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                  <strong>${vehicleName}</strong>
+                  <strong>${escapeHtml(vehicleName)}</strong>
                   <span class="receipt-date">${formatDate(r.date)}</span>
                 </div>
                 <span class="consumption-badge">${formatNumber(r.consumptionLPer100km)} L/100km</span>
