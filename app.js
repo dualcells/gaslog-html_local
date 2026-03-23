@@ -126,13 +126,15 @@ function initTabs() {
 }
 
 // Vehicle Functions
-function addVehicle(make, model, year, startingOdometer) {
+function addVehicle(make, model, year, nickname, color, startingOdometer) {
   const vehicles = getVehicles();
   const vehicle = {
     id: generateId(),
     make,
     model,
     year: parseInt(year),
+    nickname: nickname || null,
+    color: color || '#2563eb',
     startingOdometer: parseInt(startingOdometer),
     createdAt: new Date().toISOString()
   };
@@ -143,7 +145,7 @@ function addVehicle(make, model, year, startingOdometer) {
   updateVehicleSelects();
 }
 
-function updateVehicle(id, make, model, year, startingOdometer) {
+function updateVehicle(id, make, model, year, nickname, color, startingOdometer) {
   const vehicles = getVehicles();
   const index = vehicles.findIndex(v => v.id === id);
   if (index !== -1) {
@@ -152,6 +154,8 @@ function updateVehicle(id, make, model, year, startingOdometer) {
       make,
       model,
       year: parseInt(year),
+      nickname: nickname || null,
+      color: color || '#2563eb',
       startingOdometer: parseInt(startingOdometer)
     };
     saveVehicles(vehicles);
@@ -191,7 +195,11 @@ function renderVehicleList() {
   list.innerHTML = vehicles.map(v => `
     <li class="vehicle-item">
       <div class="vehicle-info">
-        <h3>${escapeHtml(v.make)} ${escapeHtml(v.model)}</h3>
+        <h3 style="display: flex; align-items: center; gap: 0.5rem;">
+          <span style="width: 12px; height: 12px; border-radius: 50%; background-color: ${escapeHtml(v.color || '#2563eb')};"></span>
+          ${escapeHtml(v.make)} ${escapeHtml(v.model)}
+          ${v.nickname ? `<span style="font-size: 0.85rem; color: var(--text-secondary);">(${escapeHtml(v.nickname)})</span>` : ''}
+        </h3>
         <p>${escapeHtml(String(v.year))} | Starting: ${v.startingOdometer.toLocaleString()} km</p>
       </div>
       <div class="vehicle-actions">
@@ -207,12 +215,17 @@ function updateVehicleSelects() {
   const receiptSelect = document.getElementById('receipt-vehicle');
   const filterSelect = document.getElementById('filter-vehicle');
 
+  const getVehicleLabel = (v) => {
+    const base = `${v.make} ${v.model}`;
+    return v.nickname ? `${base} (${v.nickname})` : base;
+  };
+
   const options = '<option value="">Select a vehicle</option>' +
-    vehicles.map(v => `<option value="${escapeHtml(v.id)}">${escapeHtml(v.make)} ${escapeHtml(v.model)}</option>`).join('');
+    vehicles.map(v => `<option value="${escapeHtml(v.id)}">${escapeHtml(getVehicleLabel(v))}</option>`).join('');
 
   receiptSelect.innerHTML = options;
   filterSelect.innerHTML = '<option value="">All Vehicles</option>' +
-    vehicles.map(v => `<option value="${escapeHtml(v.id)}">${escapeHtml(v.make)} ${escapeHtml(v.model)}</option>`).join('');
+    vehicles.map(v => `<option value="${escapeHtml(v.id)}">${escapeHtml(getVehicleLabel(v))}</option>`).join('');
 }
 
 // Receipt Functions
@@ -267,6 +280,11 @@ function deleteReceipt(id) {
   renderDashboard();
 }
 
+function getVehicleLabel(v) {
+  const base = `${v.make} ${v.model}`;
+  return v.nickname ? `${base} (${v.nickname})` : base;
+}
+
 function renderReceiptList() {
   const receipts = getReceipts();
   const vehicles = getVehicles();
@@ -285,7 +303,7 @@ function renderReceiptList() {
 
   list.innerHTML = filteredReceipts.map(r => {
     const vehicle = getVehicleById(r.vehicleId);
-    const vehicleName = vehicle ? `${vehicle.make} ${vehicle.model}` : 'Unknown';
+    const vehicleName = vehicle ? getVehicleLabel(vehicle) : 'Unknown';
     return `
       <li class="receipt-item">
         <div class="receipt-header">
@@ -362,7 +380,11 @@ function renderDashboard() {
       return `
         <div class="vehicle-item" style="margin-bottom: 1rem;">
           <div class="vehicle-info">
-            <h3>${escapeHtml(v.make)} ${escapeHtml(v.model)}</h3>
+            <h3 style="display: flex; align-items: center; gap: 0.5rem;">
+              <span style="width: 12px; height: 12px; border-radius: 50%; background-color: ${escapeHtml(v.color || '#2563eb')};"></span>
+              ${escapeHtml(v.make)} ${escapeHtml(v.model)}
+              ${v.nickname ? `<span style="font-size: 0.85rem; color: var(--text-secondary);">(${escapeHtml(v.nickname)})</span>` : ''}
+            </h3>
             <p>${vReceipts.length} receipt(s) | Total: ${formatCurrency(totalSpent)}</p>
           </div>
           <div class="stat-card" style="padding: 0.5rem;">
@@ -382,7 +404,7 @@ function renderDashboard() {
     const sorted = [...receipts].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
     recentReceipts.innerHTML = sorted.map(r => {
       const vehicle = getVehicleById(r.vehicleId);
-      const vehicleName = vehicle ? `${vehicle.make} ${vehicle.model}` : 'Unknown';
+      const vehicleName = vehicle ? getVehicleLabel(vehicle) : 'Unknown';
       return `
         <div class="receipt-item" style="padding: 0.75rem;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -414,10 +436,10 @@ function closeModal(modalId) {
 
 function confirmDeleteVehicle(id) {
   const vehicle = getVehicleById(id);
+  const vehicleLabel = getVehicleLabel(vehicle);
   document.getElementById('delete-message').textContent =
-    `Are you sure you want to delete "${vehicle.make} ${vehicle.model}"? All associated receipts will also be deleted.`;
+    `Are you sure you want to delete "${vehicleLabel}"? All associated receipts will also be deleted.`;
   deleteCallback = () => deleteVehicle(id);
-  openModal('delete-modal');
 }
 
 function confirmDeleteReceipt(id) {
@@ -434,6 +456,8 @@ function openEditVehicleModal(id) {
   document.getElementById('edit-vehicle-make').value = vehicle.make;
   document.getElementById('edit-vehicle-model').value = vehicle.model;
   document.getElementById('edit-vehicle-year').value = vehicle.year;
+  document.getElementById('edit-vehicle-nickname').value = vehicle.nickname || '';
+  document.getElementById('edit-vehicle-color').value = vehicle.color || '#2563eb';
   document.getElementById('edit-vehicle-odometer').value = vehicle.startingOdometer;
   openModal('edit-vehicle-modal');
 }
@@ -524,6 +548,8 @@ function initEventListeners() {
       document.getElementById('vehicle-make').value.trim(),
       document.getElementById('vehicle-model').value.trim(),
       document.getElementById('vehicle-year').value,
+      document.getElementById('vehicle-nickname').value.trim(),
+      document.getElementById('vehicle-color').value,
       document.getElementById('vehicle-odometer').value
     );
     e.target.reset();
@@ -570,6 +596,8 @@ function initEventListeners() {
       document.getElementById('edit-vehicle-make').value.trim(),
       document.getElementById('edit-vehicle-model').value.trim(),
       document.getElementById('edit-vehicle-year').value,
+      document.getElementById('edit-vehicle-nickname').value.trim(),
+      document.getElementById('edit-vehicle-color').value,
       document.getElementById('edit-vehicle-odometer').value
     );
     closeModal('edit-vehicle-modal');
