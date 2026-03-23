@@ -589,6 +589,13 @@ function initEventListeners() {
     }
   });
 
+  document.getElementById('about-btn').addEventListener('click', () => {
+    openModal('about-modal');
+  });
+  document.getElementById('close-about').addEventListener('click', () => {
+    closeModal('about-modal');
+  });
+
   document.getElementById('edit-vehicle-form').addEventListener('submit', (e) => {
     e.preventDefault();
     updateVehicle(

@@ -14,6 +14,7 @@
         <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
         <button class="tab-btn" data-tab="vehicles">Vehicles</button>
         <button class="tab-btn" data-tab="receipts">Receipts</button>
+        <button class="tab-btn" id="about-btn" style="margin-left: auto;">About</button>
       </nav>
     </div>
   </header>
@@ -229,6 +230,46 @@
       <div class="modal-actions">
         <button type="button" class="btn btn-secondary" id="cancel-delete">Cancel</button>
         <button type="button" class="btn btn-danger" id="confirm-delete">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- About Modal -->
+  <div class="modal-overlay" id="about-modal">
+    <div class="modal">
+      <h3>About Gas Log</h3>
+      <div style="margin-bottom: 1rem;">
+        <p style="margin-bottom: 0.75rem;"><strong>Version 1.0.0</strong></p>
+        <p style="margin-bottom: 0.75rem; color: var(--text-secondary); font-size: 0.9rem;">
+          Track your vehicle's fuel consumption and calculate L/100km.
+        </p>
+        <div style="background: var(--bg-secondary); padding: 0.75rem; border-radius: 4px; margin-bottom: 0.75rem;">
+          <p style="font-size: 0.85rem; margin-bottom: 0.5rem;"><strong>How consumption is calculated:</strong></p>
+          <p style="font-size: 0.85rem; color: var(--text-secondary);">
+            (Fuel Volume in Litres ÷ Distance Travelled in km) × 100 = L/100km
+          </p>
+        </div>
+        <div style="background: var(--bg-secondary); padding: 0.75rem; border-radius: 4px; margin-bottom: 0.75rem;">
+          <p style="font-size: 0.85rem; margin-bottom: 0.5rem;"><strong>Data Storage:</strong></p>
+          <p style="font-size: 0.85rem; color: var(--text-secondary);">
+            All data is stored locally in your browser using localStorage. 
+            Nothing is sent to any server. Use the Export button to back up your data.
+          </p>
+        </div>
+        <div style="background: var(--bg-secondary); padding: 0.75rem; border-radius: 4px; margin-bottom: 0.75rem;">
+          <p style="font-size: 0.85rem; margin-bottom: 0.5rem;"><strong>Tips for accurate tracking:</strong></p>
+          <ul style="font-size: 0.85rem; color: var(--text-secondary); padding-left: 1.25rem;">
+            <li>Fill up the tank completely each time</li>
+            <li>Enter the odometer reading from your vehicle</li>
+            <li>Record receipts immediately after filling up</li>
+          </ul>
+        </div>
+        <p style="font-size: 0.8rem; color: var(--text-secondary);">
+          Built with HTML, CSS, and JavaScript. Works offline.
+        </p>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-primary" id="close-about">Close</button>
       </div>
     </div>
   </div>
