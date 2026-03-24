@@ -183,6 +183,19 @@ function deleteVehicle(id) {
   renderReceiptList();
 }
 
+function clearAllData() {
+  document.getElementById('delete-message').textContent = 'Are you sure you want to delete ALL data? This cannot be undone.';
+  deleteCallback = () => {
+    localStorage.clear();
+    showAlert('All data cleared.');
+    renderVehicleList();
+    updateVehicleSelects();
+    renderReceiptList();
+    renderDashboard();
+  };
+  openModal('delete-modal');
+}
+
 function renderVehicleList() {
   const vehicles = getVehicles();
   const list = document.getElementById('vehicle-list');
@@ -702,6 +715,7 @@ function initEventListeners() {
       document.getElementById('import-password').value = '';
     }
   });
+  document.getElementById('clear-data-btn').addEventListener('click', clearAllData);
 
   document.getElementById('about-btn').addEventListener('click', () => {
     openModal('about-modal');
