@@ -14,7 +14,8 @@
         <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
         <button class="tab-btn" data-tab="vehicles">Vehicles</button>
         <button class="tab-btn" data-tab="receipts">Receipts</button>
-        <button class="tab-btn" id="about-btn" style="margin-left: auto;">About</button>
+        <button class="tab-btn" data-tab="data">Data</button>
+        <button class="tab-btn tab-btn-right" id="about-btn">About</button>
       </nav>
     </div>
   </header>
@@ -166,16 +167,34 @@
       </div>
     </section>
 
-    <!-- Data Management -->
-    <section class="card">
-      <h2>Data Management</h2>
-      <p style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
-        Export your data to back it up or import data from a previous backup.
-      </p>
-      <div class="data-actions">
-        <button class="btn btn-secondary" id="export-btn">📥 Export Data (JSON)</button>
-        <button class="btn btn-secondary" id="import-btn">📤 Import Data (JSON)</button>
-        <input type="file" id="import-file" accept=".json" style="display: none;">
+    <!-- Data Tab -->
+    <section id="data" class="tab-content">
+      <div class="card">
+        <h2>Data Management</h2>
+        <p class="about-section">
+          Export your data to back it up or import data from a previous backup.
+        </p>
+        <div class="form-checkbox-group">
+          <input type="checkbox" id="encrypt-export">
+          <label for="encrypt-export" class="checkbox-label">Encrypt export with password</label>
+        </div>
+        <div class="form-group hidden" id="export-password-group">
+          <label for="export-password">Password</label>
+          <input type="password" id="export-password" placeholder="Enter encryption password">
+        </div>
+        <div class="data-actions">
+          <button class="btn btn-secondary" id="export-btn">📥 Export Data (JSON)</button>
+          <button class="btn btn-secondary" id="import-btn">📤 Import Data (JSON)</button>
+          <input type="file" id="import-file" accept=".json" class="hidden">
+        </div>
+        <div class="form-group hidden" id="import-password-group">
+          <label for="import-password">Password (if encrypted)</label>
+          <input type="password" id="import-password" placeholder="Enter decryption password">
+        </div>
+        <div class="danger-zone">
+          <p>Danger zone: Clear all data from this browser.</p>
+          <button class="btn btn-secondary" id="clear-data-btn">🗑️ Clear All Data</button>
+        </div>
       </div>
     </section>
   </main>
@@ -238,33 +257,33 @@
   <div class="modal-overlay" id="about-modal">
     <div class="modal">
       <h3>About Gas Log</h3>
-      <div style="margin-bottom: 1rem;">
-        <p style="margin-bottom: 0.75rem;"><strong>Version 1.0.0</strong></p>
-        <p style="margin-bottom: 0.75rem; color: var(--text-secondary); font-size: 0.9rem;">
+      <div class="about-section">
+        <p class="version-text"><strong>Version 1.1.0</strong></p>
+        <p>
           Track your vehicle's fuel consumption and calculate L/100km.
         </p>
-        <div style="background: var(--bg-secondary); padding: 0.75rem; border-radius: 4px; margin-bottom: 0.75rem;">
-          <p style="font-size: 0.85rem; margin-bottom: 0.5rem;"><strong>How consumption is calculated:</strong></p>
-          <p style="font-size: 0.85rem; color: var(--text-secondary);">
+        <div class="info-box">
+          <p><strong>How consumption is calculated:</strong></p>
+          <p class="info-text">
             (Fuel Volume in Litres ÷ Distance Travelled in km) × 100 = L/100km
           </p>
         </div>
-        <div style="background: var(--bg-secondary); padding: 0.75rem; border-radius: 4px; margin-bottom: 0.75rem;">
-          <p style="font-size: 0.85rem; margin-bottom: 0.5rem;"><strong>Data Storage:</strong></p>
-          <p style="font-size: 0.85rem; color: var(--text-secondary);">
+        <div class="info-box">
+          <p><strong>Data Storage:</strong></p>
+          <p class="info-text">
             All data is stored locally in your browser using localStorage. 
             Nothing is sent to any server. Use the Export button to back up your data.
           </p>
         </div>
-        <div style="background: var(--bg-secondary); padding: 0.75rem; border-radius: 4px; margin-bottom: 0.75rem;">
-          <p style="font-size: 0.85rem; margin-bottom: 0.5rem;"><strong>Tips for accurate tracking:</strong></p>
-          <ul style="font-size: 0.85rem; color: var(--text-secondary); padding-left: 1.25rem;">
+        <div class="info-box">
+          <p><strong>Tips for accurate tracking:</strong></p>
+          <ul class="tip-list">
             <li>Fill up the tank completely each time</li>
             <li>Enter the odometer reading from your vehicle</li>
             <li>Record receipts immediately after filling up</li>
           </ul>
         </div>
-        <p style="font-size: 0.8rem; color: var(--text-secondary);">
+        <p class="small-text">
           Built with HTML, CSS, and JavaScript. Works offline.
         </p>
       </div>
