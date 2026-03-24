@@ -440,6 +440,7 @@ function confirmDeleteVehicle(id) {
   document.getElementById('delete-message').textContent =
     `Are you sure you want to delete "${vehicleLabel}"? All associated receipts will also be deleted.`;
   deleteCallback = () => deleteVehicle(id);
+  openModal('delete-modal');
 }
 
 function confirmDeleteReceipt(id) {
@@ -610,7 +611,8 @@ function importData(file) {
       
       const existingReceiptsForVehicle = existingReceipts.filter(er => er.vehicleId === r.vehicleId);
       const lastReceipt = existingReceiptsForVehicle.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
-      const previousOdometer = lastReceipt ? lastReceipt.odometer : 0;
+      const importedVehicle = data.vehicles.find(v => v.id === r.vehicleId);
+      const previousOdometer = lastReceipt ? lastReceipt.odometer : (importedVehicle ? importedVehicle.startingOdometer : 0);
       if (r.odometer < previousOdometer) return false;
       
       return true;
