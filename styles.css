@@ -438,3 +438,108 @@ header h1 {
   text-align: center;
   color: var(--text-secondary);
 }
+
+.hidden {
+  display: none;
+}
+
+.danger-zone {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.danger-zone p {
+  margin-bottom: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.danger-zone .btn {
+  background: var(--error);
+  color: white;
+}
+
+.info-box {
+  background: var(--bg-secondary);
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 0.75rem;
+}
+
+.info-box p {
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.info-box p:last-child {
+  margin-bottom: 0;
+}
+
+.info-box strong {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.info-text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.tip-list {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  padding-left: 1.25rem;
+}
+
+.form-checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.form-checkbox-group input {
+  width: auto;
+}
+
+.form-checkbox-group label {
+  margin-bottom: 0;
+  font-size: 0.9rem;
+}
+
+.checkbox-label {
+  font-size: 0.9rem;
+}
+
+.about-section {
+  margin-bottom: 1rem;
+}
+
+.about-section p {
+  margin-bottom: 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.about-section p:last-child {
+  margin-bottom: 0;
+}
+
+.version-text {
+  margin-bottom: 0.75rem;
+}
+
+.version-text strong {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.small-text {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.tab-btn-right {
+  margin-left: auto;
+}

@@ -701,12 +701,12 @@ function initEventListeners() {
   document.getElementById('filter-vehicle').addEventListener('change', renderReceiptList);
 
   document.getElementById('encrypt-export').addEventListener('change', (e) => {
-    document.getElementById('export-password-group').style.display = e.target.checked ? 'block' : 'none';
+    document.getElementById('export-password-group').classList.toggle('hidden', !e.target.checked);
   });
 
   document.getElementById('export-btn').addEventListener('click', exportData);
   document.getElementById('import-btn').addEventListener('click', () => {
-    document.getElementById('import-password-group').style.display = 'block';
+    document.getElementById('import-password-group').classList.remove('hidden');
     document.getElementById('import-file').click();
   });
   document.getElementById('import-file').addEventListener('change', (e) => {
