@@ -464,79 +464,184 @@ function openEditVehicleModal(id) {
 
 // Export/Import Functions
 function exportData() {
+  const encryptExport = document.getElementById('encrypt-export').checked;
+  const password = document.getElementById('export-password').value;
+  
   const data = {
     vehicles: getVehicles(),
     receipts: getReceipts(),
     exportedAt: new Date().toISOString()
   };
 
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `fuellog-backup-${new Date().toISOString().split('T')[0]}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-  showAlert('Data exported successfully!');
+  if (encryptExport && password) {
+    encryptData(JSON.stringify(data), password).then(encrypted => {
+      const blob = new Blob([encrypted], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `fuellog-backup-${new Date().toISOString().split('T')[0]}-encrypted.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showAlert('Data exported and encrypted!');
+    }).catch(err => {
+      showAlert('Encryption failed: ' + err.message, 'error');
+    });
+  } else {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `fuellog-backup-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showAlert('Data exported successfully!');
+  }
+  
+  document.getElementById('export-password').value = '';
+}
+
+async function encryptData(plaintext, password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(plaintext);
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(password),
+    'PBKDF2',
+    false,
+    ['deriveKey']
+  );
+  
+  const key = await crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt']
+  );
+  
+  const encrypted = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    data
+  );
+  
+  const combined = new Uint8Array(salt.length + iv.length + encrypted.byteLength);
+  combined.set(salt, 0);
+  combined.set(iv, salt.length);
+  combined.set(new Uint8Array(encrypted), salt.length + iv.length);
+  
+  return btoa(String.fromCharCode(...combined));
+}
+
+async function decryptData(encryptedBase64, password) {
+  const encoder = new TextEncoder();
+  const combined = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
+  
+  const salt = combined.slice(0, 16);
+  const iv = combined.slice(16, 28);
+  const encrypted = combined.slice(28);
+  
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(password),
+    'PBKDF2',
+    false,
+    ['deriveKey']
+  );
+  
+  const key = await crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['decrypt']
+  );
+  
+  const decrypted = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    encrypted
+  );
+  
+  const decoder = new TextDecoder();
+  return decoder.decode(decrypted);
 }
 
 function importData(file) {
+  const password = document.getElementById('import-password').value;
   const reader = new FileReader();
+  
+  const tryParseData = (jsonString) => {
+    const data = JSON.parse(jsonString);
+
+    if (!data.vehicles || !Array.isArray(data.vehicles)) {
+      throw new Error('Invalid data format: missing vehicles array');
+    }
+
+    if (!data.receipts || !Array.isArray(data.receipts)) {
+      throw new Error('Invalid data format: missing receipts array');
+    }
+
+    const existingVehicles = getVehicles();
+    const existingReceipts = getReceipts();
+    const existingVehicleIds = new Set(existingVehicles.map(v => v.id));
+    const existingReceiptIds = new Set(existingReceipts.map(r => r.id));
+
+    const validVehicles = data.vehicles.filter(v => {
+      if (!v.id || !v.make || !v.model || !v.year || !v.startingOdometer) return false;
+      if (existingVehicleIds.has(v.id)) return false;
+      if (typeof v.year !== 'number' || v.year < 1900 || v.year > 2100) return false;
+      if (typeof v.startingOdometer !== 'number' || v.startingOdometer < 0) return false;
+      return true;
+    });
+
+    const validReceipts = data.receipts.filter(r => {
+      if (!r.id || !r.vehicleId || !r.volumeLitres || !r.date || !r.odometer) return false;
+      if (existingReceiptIds.has(r.id)) return false;
+      if (!existingVehicleIds.has(r.vehicleId)) return false;
+      const receiptDate = new Date(r.date);
+      if (isNaN(receiptDate.getTime())) return false;
+      if (receiptDate > new Date()) return false;
+      if (typeof r.volumeLitres !== 'number' || r.volumeLitres <= 0) return false;
+      if (typeof r.odometer !== 'number' || r.odometer < 0) return false;
+      
+      const existingReceiptsForVehicle = existingReceipts.filter(er => er.vehicleId === r.vehicleId);
+      const lastReceipt = existingReceiptsForVehicle.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+      const previousOdometer = lastReceipt ? lastReceipt.odometer : 0;
+      if (r.odometer < previousOdometer) return false;
+      
+      return true;
+    });
+
+    saveVehicles([...existingVehicles, ...validVehicles]);
+    saveReceipts([...existingReceipts, ...validReceipts]);
+
+    showAlert(`Imported ${validVehicles.length} vehicles and ${validReceipts.length} receipts! (${data.vehicles.length - validVehicles.length} vehicles, ${data.receipts.length - validReceipts.length} receipts skipped)`);
+    renderVehicleList();
+    updateVehicleSelects();
+    renderReceiptList();
+    renderDashboard();
+  };
+
   reader.onload = (e) => {
-    try {
-      const data = JSON.parse(e.target.result);
-
-      if (!data.vehicles || !Array.isArray(data.vehicles)) {
-        throw new Error('Invalid data format: missing vehicles array');
-      }
-
-      if (!data.receipts || !Array.isArray(data.receipts)) {
-        throw new Error('Invalid data format: missing receipts array');
-      }
-
-      const existingVehicles = getVehicles();
-      const existingReceipts = getReceipts();
-      const existingVehicleIds = new Set(existingVehicles.map(v => v.id));
-      const existingReceiptIds = new Set(existingReceipts.map(r => r.id));
-
-      const validVehicles = data.vehicles.filter(v => {
-        if (!v.id || !v.make || !v.model || !v.year || !v.startingOdometer) return false;
-        if (existingVehicleIds.has(v.id)) return false;
-        if (typeof v.year !== 'number' || v.year < 1900 || v.year > 2100) return false;
-        if (typeof v.startingOdometer !== 'number' || v.startingOdometer < 0) return false;
-        return true;
+    const content = e.target.result;
+    
+    if (password) {
+      decryptData(content, password).then(tryParseData).catch(err => {
+        showAlert('Decryption failed: ' + err.message + '. If the file is not encrypted, leave the password field empty.', 'error');
       });
-
-      const validReceipts = data.receipts.filter(r => {
-        if (!r.id || !r.vehicleId || !r.volumeLitres || !r.date || !r.odometer) return false;
-        if (existingReceiptIds.has(r.id)) return false;
-        if (!existingVehicleIds.has(r.vehicleId)) return false;
-        const receiptDate = new Date(r.date);
-        if (isNaN(receiptDate.getTime())) return false;
-        if (receiptDate > new Date()) return false;
-        if (typeof r.volumeLitres !== 'number' || r.volumeLitres <= 0) return false;
-        if (typeof r.odometer !== 'number' || r.odometer < 0) return false;
-        
-        const existingReceiptsForVehicle = existingReceipts.filter(er => er.vehicleId === r.vehicleId);
-        const lastReceipt = existingReceiptsForVehicle.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
-        const previousOdometer = lastReceipt ? lastReceipt.odometer : 0;
-        if (r.odometer < previousOdometer) return false;
-        
-        return true;
-      });
-
-      saveVehicles([...existingVehicles, ...validVehicles]);
-      saveReceipts([...existingReceipts, ...validReceipts]);
-
-      showAlert(`Imported ${validVehicles.length} vehicles and ${validReceipts.length} receipts! (${data.vehicles.length - validVehicles.length} vehicles, ${data.receipts.length - validReceipts.length} receipts skipped)`);
-      renderVehicleList();
-      updateVehicleSelects();
-      renderReceiptList();
-      renderDashboard();
-    } catch (error) {
-      showAlert('Failed to import data: ' + error.message, 'error');
+    } else {
+      try {
+        tryParseData(content);
+      } catch (err) {
+        showAlert('Failed to import data: ' + err.message, 'error');
+      }
     }
   };
+  
   reader.readAsText(file);
 }
 
@@ -578,14 +683,19 @@ function initEventListeners() {
 
   document.getElementById('filter-vehicle').addEventListener('change', renderReceiptList);
 
+  document.getElementById('encrypt-export').addEventListener('change', (e) => {
+    document.getElementById('export-password-group').style.display = e.target.checked ? 'block' : 'none';
+  });
+
   document.getElementById('export-btn').addEventListener('click', exportData);
   document.getElementById('import-btn').addEventListener('click', () => {
+    document.getElementById('import-password-group').style.display = 'block';
     document.getElementById('import-file').click();
   });
   document.getElementById('import-file').addEventListener('change', (e) => {
     if (e.target.files.length > 0) {
       importData(e.target.files[0]);
-      e.target.value = '';
+      document.getElementById('import-password').value = '';
     }
   });
 
