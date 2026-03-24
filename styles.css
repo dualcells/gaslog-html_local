@@ -458,6 +458,8 @@ header h1 {
 .danger-zone .btn {
   background: var(--error);
   color: white;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
 }
 
 .info-box {
