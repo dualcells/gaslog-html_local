@@ -599,10 +599,12 @@ function importData(file) {
       return true;
     });
 
+    const newVehicleIds = new Set(validVehicles.map(v => v.id));
+
     const validReceipts = data.receipts.filter(r => {
       if (!r.id || !r.vehicleId || !r.volumeLitres || !r.date || !r.odometer) return false;
       if (existingReceiptIds.has(r.id)) return false;
-      if (!existingVehicleIds.has(r.vehicleId)) return false;
+      if (!existingVehicleIds.has(r.vehicleId) && !newVehicleIds.has(r.vehicleId)) return false;
       const receiptDate = new Date(r.date);
       if (isNaN(receiptDate.getTime())) return false;
       if (receiptDate > new Date()) return false;
@@ -611,7 +613,7 @@ function importData(file) {
       
       const existingReceiptsForVehicle = existingReceipts.filter(er => er.vehicleId === r.vehicleId);
       const lastReceipt = existingReceiptsForVehicle.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
-      const importedVehicle = data.vehicles.find(v => v.id === r.vehicleId);
+      const importedVehicle = validVehicles.find(v => v.id === r.vehicleId);
       const previousOdometer = lastReceipt ? lastReceipt.odometer : (importedVehicle ? importedVehicle.startingOdometer : 0);
       if (r.odometer < previousOdometer) return false;
       
