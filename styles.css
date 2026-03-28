@@ -542,6 +542,14 @@ header h1 {
   color: var(--text-secondary);
 }
 
+.small-text a {
+  color: var(--accent);
+}
+
+.small-text a:hover {
+  color: var(--accent-hover);
+}
+
 .tab-btn-right {
   margin-left: auto;
 }
