@@ -209,7 +209,13 @@ function renderVehicleList() {
     return;
   }
 
-  list.innerHTML = vehicles.map(v => `
+  list.innerHTML = vehicles.map(v => {
+    const vReceipts = getVehicleReceipts(v.id);
+    const totalFuel = vReceipts.reduce((sum, r) => sum + r.volumeLitres, 0);
+    const lastReceipt = vReceipts[0];
+    const currentOdometer = lastReceipt ? lastReceipt.odometer : v.startingOdometer;
+    
+    return `
     <li class="vehicle-item">
       <div class="vehicle-info">
         <h3 style="display: flex; align-items: center; gap: 0.5rem;">
@@ -217,14 +223,16 @@ function renderVehicleList() {
           ${escapeHtml(v.make)} ${escapeHtml(v.model)}
           ${v.nickname ? `<span style="font-size: 0.85rem; color: var(--text-secondary);">(${escapeHtml(v.nickname)})</span>` : ''}
         </h3>
-        <p>${escapeHtml(String(v.year))} | Starting: ${v.startingOdometer.toLocaleString()} km</p>
+        <p>${escapeHtml(String(v.year))} | Starting: ${v.startingOdometer.toLocaleString()} km${lastReceipt ? ` | Current: ${currentOdometer.toLocaleString()} km` : ''}</p>
+        ${vReceipts.length > 0 ? `<p style="font-size: 0.85rem; color: var(--text-secondary);">${vReceipts.length} receipt(s) | Total fuel: ${totalFuel.toFixed(2)} L</p>` : ''}
       </div>
       <div class="vehicle-actions">
         <button class="btn btn-secondary" onclick="openEditVehicleModal('${v.id}')">Edit</button>
         <button class="btn btn-danger" onclick="confirmDeleteVehicle('${v.id}')">Delete</button>
       </div>
     </li>
-  `).join('');
+  `;
+  }).join('');
 }
 
 function updateVehicleSelects() {
