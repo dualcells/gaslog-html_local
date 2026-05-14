@@ -605,10 +605,11 @@ function importData(file) {
     const existingReceiptIds = new Set(existingReceipts.map(r => r.id));
 
     const validVehicles = data.vehicles.filter(v => {
-      if (!v.id || !v.make || !v.model || !v.year || !v.startingOdometer) return false;
+      if (!v.id || !v.make || !v.model || !v.year) return false;
+      if (typeof v.startingOdometer !== 'number') return false;
       if (existingVehicleIds.has(v.id)) return false;
       if (typeof v.year !== 'number' || v.year < 1900 || v.year > 2100) return false;
-      if (typeof v.startingOdometer !== 'number' || v.startingOdometer < 0) return false;
+      if (v.startingOdometer < 0) return false;
       return true;
     });
 
