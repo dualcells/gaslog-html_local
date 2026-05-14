@@ -43,7 +43,11 @@ function getVehicleById(vehicleId) {
 }
 
 function getVehicleReceipts(vehicleId) {
-  return getReceipts().filter(r => r.vehicleId === vehicleId).sort((a, b) => new Date(b.date) - new Date(a.date));
+  return getReceipts().filter(r => r.vehicleId === vehicleId).sort((a, b) => {
+    const dateDiff = new Date(b.date) - new Date(a.date);
+    if (dateDiff !== 0) return dateDiff;
+    return b.odometer - a.odometer;
+  });
 }
 
 function getLastReceiptForVehicle(vehicleId) {
@@ -304,7 +308,11 @@ function renderReceiptList() {
   const filterVehicle = document.getElementById('filter-vehicle').value;
   const list = document.getElementById('receipt-list');
 
-  let filteredReceipts = receipts.sort((a, b) => new Date(b.date) - new Date(a.date));
+  let filteredReceipts = receipts.sort((a, b) => {
+    const dateDiff = new Date(b.date) - new Date(a.date);
+    if (dateDiff !== 0) return dateDiff;
+    return b.odometer - a.odometer;
+  });
   if (filterVehicle) {
     filteredReceipts = filteredReceipts.filter(r => r.vehicleId === filterVehicle);
   }
@@ -626,7 +634,11 @@ function importData(file) {
       if (typeof r.odometer !== 'number' || r.odometer < 0) return false;
       
       const existingReceiptsForVehicle = existingReceipts.filter(er => er.vehicleId === r.vehicleId);
-      const lastReceipt = existingReceiptsForVehicle.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+      const lastReceipt = existingReceiptsForVehicle.sort((a, b) => {
+        const dateDiff = new Date(b.date) - new Date(a.date);
+        if (dateDiff !== 0) return dateDiff;
+        return b.odometer - a.odometer;
+      })[0];
       const importedVehicle = validVehicles.find(v => v.id === r.vehicleId);
       const previousOdometer = lastReceipt ? lastReceipt.odometer : (importedVehicle ? importedVehicle.startingOdometer : 0);
       if (r.odometer < previousOdometer) return false;
