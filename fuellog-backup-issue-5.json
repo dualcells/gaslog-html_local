@@ -1,0 +1,105 @@
+{
+  "vehicles": [
+    {
+      "id": "22db901f-5ffe-4b9f-8714-7be6de9c647b",
+      "make": "Ford",
+      "model": "Bronco Sport",
+      "year": 2026,
+      "nickname": "Pumpkin",
+      "color": "#ff7e00",
+      "startingOdometer": 134,
+      "createdAt": "2026-04-22T03:07:55.031Z"
+    },
+    {
+      "id": "88096bef-1b96-4902-a61a-673a1e9b0c25",
+      "make": "Honda",
+      "model": "Rebel 500",
+      "year": 2026,
+      "nickname": "Greybeard",
+      "color": "#8f908f",
+      "startingOdometer": 1,
+      "createdAt": "2026-05-11T03:48:42.861Z"
+    }
+  ],
+  "receipts": [
+    {
+      "id": "448762b1-ad45-40bf-9e24-5d5b11030e64",
+      "vehicleId": "22db901f-5ffe-4b9f-8714-7be6de9c647b",
+      "volumeLitres": 38.34,
+      "pricePerLitre": 1.449,
+      "totalPrice": 55.554660000000005,
+      "date": "2026-04-22",
+      "odometer": 569,
+      "gasStation": "Shell",
+      "distanceKm": 435,
+      "consumptionLPer100km": 8.813793103448276,
+      "createdAt": "2026-04-22T03:08:46.146Z"
+    },
+    {
+      "id": "3747ab80-d8a0-4d57-9a04-b34ea73d6349",
+      "vehicleId": "22db901f-5ffe-4b9f-8714-7be6de9c647b",
+      "volumeLitres": 30.69,
+      "pricePerLitre": 1.449,
+      "totalPrice": 44.46981,
+      "date": "2026-04-26",
+      "odometer": 883,
+      "gasStation": "Shell",
+      "distanceKm": 314,
+      "consumptionLPer100km": 9.773885350318471,
+      "createdAt": "2026-04-26T21:02:09.854Z"
+    },
+    {
+      "id": "44997f17-3e0a-4ef7-8a09-9486029cbd22",
+      "vehicleId": "22db901f-5ffe-4b9f-8714-7be6de9c647b",
+      "volumeLitres": 35.4,
+      "pricePerLitre": 1.619,
+      "totalPrice": 57.312599999999996,
+      "date": "2026-05-06",
+      "odometer": 1314,
+      "gasStation": "Shell",
+      "distanceKm": 431,
+      "consumptionLPer100km": 8.213457076566124,
+      "createdAt": "2026-05-06T05:39:50.422Z"
+    },
+    {
+      "id": "a2a13d89-5c2c-4da0-8044-082354995bd0",
+      "vehicleId": "88096bef-1b96-4902-a61a-673a1e9b0c25",
+      "volumeLitres": 4.307,
+      "pricePerLitre": 1.699,
+      "totalPrice": 7.317593000000001,
+      "date": "2026-05-10",
+      "odometer": 115,
+      "gasStation": "Shell",
+      "distanceKm": 115,
+      "consumptionLPer100km": 3.745217391304348,
+      "createdAt": "2026-05-11T03:49:27.871Z"
+    },
+    {
+      "id": "3d9584a4-7d2c-4c25-bc1b-814c01c20f46",
+      "vehicleId": "88096bef-1b96-4902-a61a-673a1e9b0c25",
+      "volumeLitres": 7.567,
+      "pricePerLitre": 1.699,
+      "totalPrice": 12.856333000000001,
+      "date": "2026-05-10",
+      "odometer": 317,
+      "gasStation": "Shell",
+      "distanceKm": 202,
+      "consumptionLPer100km": 3.746039603960396,
+      "createdAt": "2026-05-11T03:50:19.295Z"
+    },
+    {
+      "id": "4301bb99-cf42-41af-879c-53ede31c4acb",
+      "vehicleId": "88096bef-1b96-4902-a61a-673a1e9b0c25",
+      "volumeLitres": 3.55,
+      "pricePerLitre": 1.699,
+      "totalPrice": 6.0314499999999995,
+      "date": "2026-05-12",
+      "odometer": 413,
+      "gasStation": "Tempo",
+      "distanceKm": 298,
+      "consumptionLPer100km": 1.191275167785235,
+      "createdAt": "2026-05-14T06:19:16.961Z"
+    }
+  ],
+  "exportedAt": "2026-05-14T06:19:42.152Z"
+}

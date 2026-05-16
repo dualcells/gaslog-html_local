@@ -4,4 +4,4 @@ Let's build an application to capture fuel consumption over time. It should allo
 
 ## Refinement
 
-- Would this applicaiton pass an OWASP level 1 test?
+- Would this application pass an OWASP level 1 test?
