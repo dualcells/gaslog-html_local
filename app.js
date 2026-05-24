@@ -99,7 +99,8 @@ function formatCurrency(amount) {
 }
 
 function formatDate(dateStr) {
-  const date = new Date(dateStr);
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
   return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
@@ -212,6 +213,8 @@ function renderVehicleList() {
   list.innerHTML = vehicles.map(v => {
     const vReceipts = getVehicleReceipts(v.id);
     const totalFuel = vReceipts.reduce((sum, r) => sum + r.volumeLitres, 0);
+    const avgVolume = totalFuel / vReceipts.length;
+    const maxVolume = Math.max(...vReceipts.map(r => r.volumeLitres));
     const lastReceipt = vReceipts[0];
     const currentOdometer = lastReceipt ? lastReceipt.odometer : v.startingOdometer;
     
@@ -224,7 +227,7 @@ function renderVehicleList() {
           ${v.nickname ? `<span style="font-size: 0.85rem; color: var(--text-secondary);">(${escapeHtml(v.nickname)})</span>` : ''}
         </h3>
         <p>${escapeHtml(String(v.year))} | Starting: ${v.startingOdometer.toLocaleString()} km${lastReceipt ? ` | Current: ${currentOdometer.toLocaleString()} km` : ''}</p>
-        ${vReceipts.length > 0 ? `<p style="font-size: 0.85rem; color: var(--text-secondary);">${vReceipts.length} receipt(s) | Total fuel: ${totalFuel.toFixed(2)} L</p>` : ''}
+        ${vReceipts.length > 0 ? `<p style="font-size: 0.85rem; color: var(--text-secondary);">${vReceipts.length} receipt(s) | Total fuel: ${totalFuel.toFixed(2)} L | Avg: ${avgVolume.toFixed(2)} L | Max: ${maxVolume.toFixed(2)} L</p>` : ''}
       </div>
       <div class="vehicle-actions">
         <button class="btn btn-secondary" onclick="openEditVehicleModal('${v.id}')">Edit</button>
@@ -635,7 +638,8 @@ function importData(file) {
       if (!r.id || !r.vehicleId || !r.volumeLitres || !r.date || !r.odometer) return false;
       if (existingReceiptIds.has(r.id)) return false;
       if (!existingVehicleIds.has(r.vehicleId) && !newVehicleIds.has(r.vehicleId)) return false;
-      const receiptDate = new Date(r.date);
+      const [yr, mo, dy] = r.date.split('-').map(Number);
+      const receiptDate = new Date(yr, mo - 1, dy);
       if (isNaN(receiptDate.getTime())) return false;
       if (receiptDate > new Date()) return false;
       if (typeof r.volumeLitres !== 'number' || r.volumeLitres <= 0) return false;
