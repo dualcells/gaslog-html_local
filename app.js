@@ -20,6 +20,11 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+function hexToRgb(hex) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '37, 99, 235';
+}
+
 function getVehicles() {
   const data = localStorage.getItem(STORAGE_KEYS.vehicles);
   return data ? JSON.parse(data) : [];
@@ -242,6 +247,7 @@ function updateVehicleSelects() {
   const vehicles = getVehicles();
   const receiptSelect = document.getElementById('receipt-vehicle');
   const filterSelect = document.getElementById('filter-vehicle');
+  const exportFilterSelect = document.getElementById('export-filter-vehicle');
 
   const getVehicleLabel = (v) => {
     const base = `${v.make} ${v.model}`;
@@ -251,9 +257,12 @@ function updateVehicleSelects() {
   const options = '<option value="">Select a vehicle</option>' +
     vehicles.map(v => `<option value="${escapeHtml(v.id)}">${escapeHtml(getVehicleLabel(v))}</option>`).join('');
 
-  receiptSelect.innerHTML = options;
-  filterSelect.innerHTML = '<option value="">All Vehicles</option>' +
+  const filterOptions = '<option value="">All Vehicles</option>' +
     vehicles.map(v => `<option value="${escapeHtml(v.id)}">${escapeHtml(getVehicleLabel(v))}</option>`).join('');
+
+  receiptSelect.innerHTML = options;
+  filterSelect.innerHTML = filterOptions;
+  exportFilterSelect.innerHTML = filterOptions;
 }
 
 // Receipt Functions
@@ -337,7 +346,7 @@ function renderReceiptList() {
     const vehicle = getVehicleById(r.vehicleId);
     const vehicleName = vehicle ? getVehicleLabel(vehicle) : 'Unknown';
     return `
-      <li class="receipt-item">
+      <li class="receipt-item" style="background: rgba(${hexToRgb(vehicle?.color || '#2563eb')}, 0.15); border-left-color: ${escapeHtml(vehicle?.color || '#2563eb')};">
         <div class="receipt-header">
           <div>
             <strong>${escapeHtml(vehicleName)}</strong>
@@ -438,7 +447,7 @@ function renderDashboard() {
       const vehicle = getVehicleById(r.vehicleId);
       const vehicleName = vehicle ? getVehicleLabel(vehicle) : 'Unknown';
       return `
-        <div class="receipt-item" style="padding: 0.75rem;">
+        <div class="receipt-item" style="background: rgba(${hexToRgb(vehicle?.color || '#2563eb')}, 0.15); border-left-color: ${escapeHtml(vehicle?.color || '#2563eb')}; padding: 0.75rem;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
               <strong>${escapeHtml(vehicleName)}</strong>
@@ -499,10 +508,19 @@ function openEditVehicleModal(id) {
 function exportData() {
   const encryptExport = document.getElementById('encrypt-export').checked;
   const password = document.getElementById('export-password').value;
-  
+  const filterVehicleId = document.getElementById('export-filter-vehicle').value;
+
+  let vehicles = getVehicles();
+  let receipts = getReceipts();
+
+  if (filterVehicleId) {
+    vehicles = vehicles.filter(v => v.id === filterVehicleId);
+    receipts = receipts.filter(r => r.vehicleId === filterVehicleId);
+  }
+
   const data = {
-    vehicles: getVehicles(),
-    receipts: getReceipts(),
+    vehicles: vehicles,
+    receipts: receipts,
     exportedAt: new Date().toISOString()
   };
 
@@ -512,7 +530,7 @@ function exportData() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `fuellog-backup-${new Date().toISOString().split('T')[0]}-encrypted.json`;
+      a.download = `gaslog-${new Date().toISOString().split('T')[0]}-encrypted.json`;
       a.click();
       URL.revokeObjectURL(url);
       showAlert('Data exported and encrypted!');
@@ -524,7 +542,7 @@ function exportData() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `fuellog-backup-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `gaslog-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
     showAlert('Data exported successfully!');

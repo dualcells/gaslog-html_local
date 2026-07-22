@@ -131,6 +131,81 @@ _(To be defined as the project grows)_
 - Keep commit messages concise and descriptive
 - Reference issue numbers when applicable
 
+## Release Process
+
+1. Update version in source files (`index.html`, etc.)
+2. Run `sha256sum index.html styles.css app.js` and update `checksums.txt`
+3. Commit changes
+4. Create a GitHub release with the title `Gas Log vX.Y.Z` and tag `vX.Y.Z`
+5. Write release notes following the template below
+
+### Checksums
+
+`checksums.txt` is manually maintained. To update it:
+
+```bash
+sha256sum index.html styles.css app.js
+```
+
+Replace the contents of `checksums.txt` with the output, keeping the header comment updated with the current version:
+
+```
+# Gas Log vX.Y.Z SHA256 Checksums
+# Use: sha256sum -c checksums.txt
+
+<hash>  index.html
+<hash>  styles.css
+<hash>  app.js
+```
+
+### Release Notes Template
+
+Use this structure for the GitHub release body:
+
+```markdown
+## What's New in vX.Y.Z
+
+### Bug Fixes
+
+- **#N:** Short description of the fix
+  - Sub-bullet explaining the user-facing impact or behaviour change
+
+### Features
+
+- **#N:** Short description of the feature
+  - Sub-bullet explaining how it works or what it adds
+
+### Refactoring
+
+- Description of code cleanup or structural improvements
+
+### Security
+
+- ASVS Level 1: XX% pass rate
+- ASVS Level 2: XX% pass rate
+
+_(Include this section only when security-relevant changes are made)_
+
+### Files
+
+- index.html (version bump to vX.Y.Z)
+- styles.css
+- app.js
+- checksums.txt (updated for vX.Y.Z)
+
+Verify integrity with: `sha256sum -c checksums.txt`
+```
+
+**Guidelines:**
+
+- Use `## What's New in vX.Y.Z` as the top-level heading in the body
+- Reference issue numbers with `**#N:**` in bold at the start of the line
+- Add sub-bullets under each item to explain the user-facing impact
+- Use `### Bug Fixes`, `### Features`, `### Refactoring` as category headings (omit empty categories)
+- Include `### Security` only when ASVS scores have changed or security fixes are made
+- Always include `### Files` listing all changed files and the `sha256sum -c checksums.txt` verification command
+- Keep descriptions concise and user-facing (what changed, not how)
+
 ## Security Considerations
 
 - Never expose API keys or secrets in client-side code
