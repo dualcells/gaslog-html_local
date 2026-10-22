@@ -89,6 +89,18 @@ function validateOdometer(odometer, vehicle) {
   return { valid: true };
 }
 
+function getCurrentYear() {
+  return new Date().getFullYear();
+}
+
+function getYearToDateReceipts(vehicleId) {
+  const year = String(getCurrentYear());
+  return getReceipts().filter(r => {
+    if (vehicleId && r.vehicleId !== vehicleId) return false;
+    return typeof r.date === 'string' && r.date.startsWith(year);
+  });
+}
+
 // UI Functions
 function showAlert(message, type = 'success') {
   const container = document.getElementById('alert-container');
@@ -113,6 +125,14 @@ function formatNumber(num, decimals = 2) {
   return num.toFixed(decimals);
 }
 
+function setActiveSegment(container, selector, activeBtn) {
+  container.querySelectorAll(selector).forEach(btn => {
+    const isActive = btn === activeBtn;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  });
+}
+
 // Tab Navigation
 function initTabs() {
   const tabBtns = document.querySelectorAll('.tab-btn');
@@ -131,6 +151,8 @@ function initTabs() {
 
       if (tabId === 'dashboard') {
         renderDashboard();
+      } else {
+        destroyTrendChart();
       }
     });
   });
@@ -419,8 +441,21 @@ function renderDashboard() {
         : 0;
       const totalSpent = vReceipts.reduce((sum, r) => sum + r.totalPrice, 0);
 
+      const ytdReceipts = getYearToDateReceipts(v.id);
+      const ytdConsumptions = ytdReceipts
+        .filter(r => r.consumptionLPer100km > 0)
+        .map(r => r.consumptionLPer100km);
+      const ytdAvg = ytdConsumptions.length > 0
+        ? ytdConsumptions.reduce((a, b) => a + b, 0) / ytdConsumptions.length
+        : 0;
+      const ytdDistance = ytdReceipts.reduce((sum, r) => sum + (r.distanceKm || 0), 0);
+      const ytdCost = ytdReceipts.reduce((sum, r) => sum + (r.totalPrice || 0), 0);
+      const ytdDistanceText = ytdDistance > 0
+        ? Math.round(ytdDistance).toLocaleString()
+        : '--';
+
       return `
-        <div class="vehicle-item" style="margin-bottom: 1rem;">
+        <div class="vehicle-item vehicle-stats-item">
           <div class="vehicle-info">
             <h3 style="display: flex; align-items: center; gap: 0.5rem;">
               <span style="width: 12px; height: 12px; border-radius: 50%; background-color: ${escapeHtml(v.color || '#2563eb')};"></span>
@@ -429,10 +464,27 @@ function renderDashboard() {
             </h3>
             <p>${vReceipts.length} receipt(s) | Total: ${formatCurrency(totalSpent)}</p>
           </div>
-          <div class="stat-card" style="padding: 0.5rem;">
-            <label style="font-size: 0.75rem;">Avg Consumption</label>
-            <div class="value" style="font-size: 1.25rem;">${vConsumptions.length > 0 ? formatNumber(vAvg) : '--'}</div>
-            <div class="unit" style="font-size: 0.75rem;">L/100km</div>
+          <div class="vehicle-stat-row">
+            <div class="stat-card">
+              <label>Avg Consumption</label>
+              <div class="value">${vConsumptions.length > 0 ? formatNumber(vAvg) : '--'}</div>
+              <div class="unit">L/100km</div>
+            </div>
+            <div class="stat-card">
+              <label>YTD Consumption</label>
+              <div class="value">${ytdConsumptions.length > 0 ? formatNumber(ytdAvg) : '--'}</div>
+              <div class="unit">L/100km</div>
+            </div>
+            <div class="stat-card">
+              <label>YTD Distance</label>
+              <div class="value">${ytdDistanceText}</div>
+              <div class="unit">km</div>
+            </div>
+            <div class="stat-card">
+              <label>YTD Cost</label>
+              <div class="value">${ytdCost > 0 ? formatCurrency(ytdCost) : '--'}</div>
+              <div class="unit">total</div>
+            </div>
           </div>
         </div>
       `;
@@ -462,6 +514,176 @@ function renderDashboard() {
         </div>
       `;
     }).join('');
+  }
+
+  renderTrendChart();
+}
+
+// Chart Functions
+const CHART_METRICS = {
+  distance: {
+    label: 'Distance',
+    axisTitle: 'Distance (km)',
+    format: value => `${formatNumber(value, 0)} km`,
+    axisFormat: value => formatNumber(value, 0)
+  },
+  cost: {
+    label: 'Cost',
+    axisTitle: 'Cost ($)',
+    format: value => formatCurrency(value),
+    axisFormat: value => formatCurrency(value)
+  },
+  consumption: {
+    label: 'Consumption',
+    axisTitle: 'Consumption (L/100km)',
+    format: value => `${formatNumber(value)} L/100km`,
+    axisFormat: value => formatNumber(value, 1)
+  }
+};
+
+let trendChart = null;
+let chartMetric = 'distance';
+let chartScope = 'year';
+
+function destroyTrendChart() {
+  if (trendChart) {
+    trendChart.destroy();
+    trendChart = null;
+  }
+}
+
+function getThemeColor(variable, fallback) {
+  const value = getComputedStyle(document.documentElement)
+    .getPropertyValue(variable)
+    .trim();
+  return value || fallback;
+}
+
+function parseReceiptDate(dateStr) {
+  const [year, month, day] = String(dateStr).split('-').map(Number);
+  if (!year || !month || !day) return null;
+  const date = new Date(year, month - 1, day);
+  return isNaN(date.getTime()) ? null : date;
+}
+
+function getChartReceipts(vehicleId) {
+  if (chartScope === 'year') return getYearToDateReceipts(vehicleId);
+  return getReceipts().filter(r => !vehicleId || r.vehicleId === vehicleId);
+}
+
+function getMetricValue(receipt, metric) {
+  if (metric === 'distance') return receipt.distanceKm;
+  if (metric === 'cost') return receipt.totalPrice;
+  if (metric === 'consumption') return receipt.consumptionLPer100km;
+  return 0;
+}
+
+function buildChartDatasets() {
+  return getVehicles().map(v => {
+    const color = v.color || '#2563eb';
+    const points = getChartReceipts(v.id)
+      .map(r => ({ date: parseReceiptDate(r.date), value: getMetricValue(r, chartMetric) }))
+      .filter(p => p.date !== null && p.value > 0)
+      .sort((a, b) => a.date - b.date)
+      .map(p => ({ x: p.date, y: p.value }));
+
+    return {
+      label: getVehicleLabel(v),
+      data: points,
+      borderColor: color,
+      backgroundColor: `rgba(${hexToRgb(color)}, 0.15)`,
+      pointBackgroundColor: color,
+      borderWidth: 2,
+      pointRadius: 3,
+      pointHoverRadius: 5,
+      tension: 0.25,
+      fill: false
+    };
+  }).filter(d => d.data.length > 0);
+}
+
+function renderTrendChart() {
+  const container = document.getElementById('trend-chart-container');
+  const canvas = document.getElementById('trend-chart');
+  const emptyMessage = document.getElementById('trend-chart-empty');
+  if (!container || !canvas || !emptyMessage) return;
+
+  destroyTrendChart();
+
+  // A hidden section has no size, so a chart built there would render with
+  // zero dimensions. It is rebuilt when the dashboard becomes visible again.
+  const dashboard = document.getElementById('dashboard');
+  if (!dashboard.classList.contains('active')) return;
+
+  const metric = CHART_METRICS[chartMetric];
+  const datasets = buildChartDatasets();
+
+  if (datasets.length === 0) {
+    container.classList.add('hidden');
+    emptyMessage.textContent = chartScope === 'year'
+      ? `No data for ${getCurrentYear()} yet. Add receipts to see the trend.`
+      : 'No data yet. Add receipts to see the trend.';
+    emptyMessage.classList.remove('hidden');
+    return;
+  }
+
+  container.classList.remove('hidden');
+  emptyMessage.classList.add('hidden');
+
+  // The app is expected to work offline, where the CDN is unreachable.
+  if (typeof Chart === 'undefined') {
+    container.classList.add('hidden');
+    emptyMessage.textContent = 'Chart library unavailable offline. Your data is still saved.';
+    emptyMessage.classList.remove('hidden');
+    return;
+  }
+
+  const textColor = getThemeColor('--text-secondary', '#666666');
+  const gridColor = getThemeColor('--border', '#d1d5db');
+  canvas.setAttribute('aria-label',
+    `Line chart of ${metric.label.toLowerCase()} over time for each vehicle`);
+
+  try {
+    trendChart = new Chart(canvas.getContext('2d'), {
+      type: 'line',
+      data: { datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'nearest', intersect: false },
+        scales: {
+          x: {
+            type: 'time',
+            time: {
+              tooltipFormat: 'MMM d, yyyy',
+              displayFormats: { day: 'MMM d', week: 'MMM d' }
+            },
+            ticks: { color: textColor },
+            grid: { color: gridColor }
+          },
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: metric.axisTitle, color: textColor },
+            ticks: { color: textColor, callback: value => metric.axisFormat(value) },
+            grid: { color: gridColor }
+          }
+        },
+        plugins: {
+          legend: { labels: { color: textColor, usePointStyle: true } },
+          tooltip: {
+            callbacks: {
+              label: ctx => ` ${ctx.dataset.label}: ${metric.format(ctx.parsed.y)}`
+            }
+          }
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Failed to render the trend chart:', error);
+    trendChart = null;
+    container.classList.add('hidden');
+    emptyMessage.textContent = 'Could not render the chart.';
+    emptyMessage.classList.remove('hidden');
   }
 }
 
@@ -760,6 +982,33 @@ function initEventListeners() {
     }
   });
   document.getElementById('clear-data-btn').addEventListener('click', clearAllData);
+
+  const chartControls = document.getElementById('trend-chart-controls');
+  if (chartControls) {
+    chartControls.addEventListener('click', (e) => {
+      const btn = e.target.closest('.segmented-btn');
+      if (!btn) return;
+
+      if (btn.dataset.metric) {
+        chartMetric = btn.dataset.metric;
+        setActiveSegment(chartControls, '[data-metric]', btn);
+      } else if (btn.dataset.scope) {
+        chartScope = btn.dataset.scope;
+        setActiveSegment(chartControls, '[data-scope]', btn);
+      } else {
+        return;
+      }
+
+      renderTrendChart();
+    });
+  }
+
+  // The chart reads its colours from the theme, so it has to be rebuilt when
+  // the system switches between light and dark mode.
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    const dashboard = document.getElementById('dashboard');
+    if (dashboard.classList.contains('active')) renderTrendChart();
+  });
 
   document.getElementById('about-btn').addEventListener('click', () => {
     openModal('about-modal');

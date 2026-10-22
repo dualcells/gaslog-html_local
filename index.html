@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gas Log - Track Your Fuel Consumption</title>
   <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js">
+  </script>
 </head>
 <body>
   <header>
@@ -46,6 +50,33 @@
             <div class="unit">L/100km</div>
           </div>
         </div>
+      </div>
+
+      <div class="card">
+        <h2>Trends</h2>
+        <div class="chart-controls" id="trend-chart-controls">
+          <div class="segmented" role="group" aria-label="Chart metric">
+            <button type="button" class="segmented-btn active" data-metric="distance"
+              aria-pressed="true">Distance</button>
+            <button type="button" class="segmented-btn" data-metric="cost"
+              aria-pressed="false">Cost</button>
+            <button type="button" class="segmented-btn" data-metric="consumption"
+              aria-pressed="false">Consumption</button>
+          </div>
+          <div class="segmented" role="group" aria-label="Chart time range">
+            <button type="button" class="segmented-btn active" data-scope="year"
+              aria-pressed="true">This year</button>
+            <button type="button" class="segmented-btn" data-scope="all"
+              aria-pressed="false">All time</button>
+          </div>
+        </div>
+        <div class="chart-container" id="trend-chart-container">
+          <canvas id="trend-chart" role="img"
+            aria-label="Line chart of distance over time per vehicle"></canvas>
+        </div>
+        <p class="no-receipts hidden" id="trend-chart-empty">
+          No data for this year yet. Add receipts to see the trend.
+        </p>
       </div>
 
       <div class="card">
@@ -264,7 +295,7 @@
     <div class="modal">
       <h3>About Gas Log</h3>
       <div class="about-section">
-        <p class="version-text"><strong>Version 1.3.1</strong></p>
+        <p class="version-text"><strong>Version 1.4.0</strong></p>
         <p>
           Track your vehicle's fuel consumption and calculate L/100km.
         </p>

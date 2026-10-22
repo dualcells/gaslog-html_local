@@ -8,9 +8,11 @@ A fuel consumption tracker built with HTML, CSS, and JavaScript.
 - Record fuel receipts with volume, price, date, odometer, and gas station
 - Automatic calculation of fuel consumption (L/100km)
 - Dashboard with statistics and averages
+- Year-to-date consumption, distance and cost per vehicle
+- Interactive charts of distance, cost and consumption over time
 - Export/import data as JSON
 - Optional password encryption for exports
-- Works offline - no server required
+- Works offline - no server required (the chart library is fetched from a CDN)
 - Dark/light theme support
 
 ## Usage
