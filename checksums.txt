@@ -1,6 +1,6 @@
-# Gas Log v1.3.0 SHA256 Checksums
+# Gas Log v1.3.1 SHA256 Checksums
 # Use: sha256sum -c checksums.txt
 
-b53be4d9bbe24715946fcfe744ed77e67ffd25b7db336758d3332fb16cefde8f  index.html
+58067f5fcf1301dbfa9ccc5643ba6a6d2107bee72e4ee4cc15bd35610c9c703e  index.html
 881fa9973dc638aad14068bd6f602ba2eb23f58c7879e24851fc4ce73bad2953  styles.css
-a63c7a4dbb81e19402145959a9935ece7b7be87b6c4ff8fdc4da7d42a247f804  app.js
+b02acbe6b5756b90228e94c8cc7f5c786049f8e11a4ad9a46ce20d31b45025e4  app.js
