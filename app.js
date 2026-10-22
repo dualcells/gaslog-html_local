@@ -133,6 +133,45 @@ function setActiveSegment(container, selector, activeBtn) {
   });
 }
 
+const THEME_STORAGE_KEY = 'fuellog_theme';
+const THEME_CYCLE = ['system', 'light', 'dark'];
+const THEME_ICONS = { system: '🌓', light: '☀️', dark: '🌙' };
+const THEME_LABELS = {
+  system: 'System theme',
+  light: 'Light theme',
+  dark: 'Dark theme'
+};
+
+function getThemePreference() {
+  try {
+    const stored = localStorage.getItem(THEME_STORAGE_KEY);
+    return THEME_CYCLE.includes(stored) ? stored : 'system';
+  } catch (e) {
+    return 'system';
+  }
+}
+
+function applyTheme(preference) {
+  const root = document.documentElement;
+  if (preference === 'system') {
+    root.removeAttribute('data-theme');
+  } else {
+    root.setAttribute('data-theme', preference);
+  }
+
+  const toggle = document.getElementById('theme-toggle');
+  if (toggle) {
+    toggle.textContent = THEME_ICONS[preference] || THEME_ICONS.system;
+    toggle.setAttribute('aria-label', `Theme: ${THEME_LABELS[preference] || THEME_LABELS.system}. Click to change.`);
+    toggle.title = `Theme: ${THEME_LABELS[preference] || THEME_LABELS.system}`;
+  }
+}
+
+function initTheme() {
+  const preference = getThemePreference();
+  applyTheme(preference);
+}
+
 // Tab Navigation
 function initTabs() {
   const tabBtns = document.querySelectorAll('.tab-btn');
@@ -983,6 +1022,25 @@ function initEventListeners() {
   });
   document.getElementById('clear-data-btn').addEventListener('click', clearAllData);
 
+  const themeToggle = document.getElementById('theme-toggle');
+  if (themeToggle) {
+    themeToggle.addEventListener('click', () => {
+      const current = getThemePreference();
+      const currentIndex = THEME_CYCLE.indexOf(current);
+      const next = THEME_CYCLE[(currentIndex + 1) % THEME_CYCLE.length];
+      try {
+        localStorage.setItem(THEME_STORAGE_KEY, next);
+      } catch (e) {
+        // Ignore storage errors (e.g. private mode)
+      }
+      applyTheme(next);
+      const dashboard = document.getElementById('dashboard');
+      if (dashboard && dashboard.classList.contains('active')) {
+        renderTrendChart();
+      }
+    });
+  }
+
   const chartControls = document.getElementById('trend-chart-controls');
   if (chartControls) {
     chartControls.addEventListener('click', (e) => {
@@ -1006,8 +1064,10 @@ function initEventListeners() {
   // The chart reads its colours from the theme, so it has to be rebuilt when
   // the system switches between light and dark mode.
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    const preference = getThemePreference();
+    if (preference !== 'system') return;
     const dashboard = document.getElementById('dashboard');
-    if (dashboard.classList.contains('active')) renderTrendChart();
+    if (dashboard && dashboard.classList.contains('active')) renderTrendChart();
   });
 
   document.getElementById('about-btn').addEventListener('click', () => {
@@ -1062,6 +1122,7 @@ function initEventListeners() {
 
 // Initialize App
 function init() {
+  initTheme();
   initTabs();
   initEventListeners();
   renderVehicleList();
